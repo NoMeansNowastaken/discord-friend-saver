@@ -1,4 +1,4 @@
-import discord, json, ctypes
+import discord, json, os
 from discord.errors import LoginFailure
 from discord.ext import commands, tasks
 
@@ -9,28 +9,30 @@ with open ('config.json') as UserData:
 token = file.get('token')
 prefix = file.get('prefix')
 
-ctypes.windll.kernel32.SetConsoleTitleW('Back Up Your Discord FriendsList')
+os.system('title Program')
 
 client = commands.Bot(description = "Discord Friends-List Saver", command_prefix = prefix, self_bot = True)
 client.remove_command('help')
 
-print("The command(s) To Save Your Friends Are: friends, savefriend, friendslist, friend, savelist, savefriends.\n")
+# after login print username
+@client.event
+async def on_ready():
+    print(f"Logged in as: {client.user.name}#{client.user.discriminator}")
+    savefriends()
 
-@client.command(aliases=['friends','savefriend','friendslist','friend','savelist'])
-async def savefriends(ctx):
-    await ctx.message.delete()
 
-    flist = open('list.txt','r+',encoding='utf-8')
-
-    print("Getting Friends List...\n")
-    for user in client.user.friends:
-        friends = user.name+'#'+user.discriminator
-        flist.write(str(friends)+"\n")
-    print('\n')
+def savefriends():
+    
+    print("Getting Friends List...")
+    with open('friends.txt','r+',encoding='utf-8') as f:
+        for user in client.user.friends:
+            f.write(f'{user.name}#{user.discriminator}\n')
     print("Done!")
+    client.close()
+    exit()
 
 
 try:
     client.run(token, bot = False, reconnect = True)
-except LoginFailure and discord.errors.Forbidden:
+except LoginFailure or discord.errors.Forbidden or discord.errors.HTTPException:
     print("Improper Token Has Been Passed Please Check CFG File.")
